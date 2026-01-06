@@ -100,6 +100,20 @@ export interface Analytics {
   created_at: string
 }
 
+// =============================================================================
+// MULTI-USER TYPES (Sistema de autenticación y roles)
+// =============================================================================
+
+export interface UserProfile {
+  id: string
+  email: string
+  full_name: string | null
+  role: 'user' | 'admin'
+  created_at: string
+  updated_at: string
+}
+
+// Legacy type - Mantener por compatibilidad con código existente
 export interface Admin {
   id: string
   email: string

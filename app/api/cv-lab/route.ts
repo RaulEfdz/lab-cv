@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
     const { data: cv, error: cvError } = await supabase
       .from('cv_lab_cvs')
       .insert({
+        user_id: user.id, // Asignar CV al usuario autenticado
         title,
         target_role,
         industry,

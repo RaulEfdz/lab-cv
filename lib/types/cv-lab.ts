@@ -121,6 +121,7 @@ export interface CvLabCvData {
 
 export interface CvLabCv {
   id: string
+  user_id: string // ID del usuario propietario del CV
   title: string
   target_role: string | null
   industry: string | null
