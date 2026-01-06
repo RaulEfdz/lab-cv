@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, KeyboardEvent } from 'react'
+import { useState, useRef, KeyboardEvent, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Send, Paperclip, X, FileText, Loader2 } from 'lucide-react'
@@ -17,8 +17,17 @@ export function ChatInput({ onSend, disabled, cvId }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [promptVersion, setPromptVersion] = useState('v4.3')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Fetch active prompt version
+  useEffect(() => {
+    fetch('/api/cv-lab/prompt/version')
+      .then(res => res.json())
+      .then(data => setPromptVersion(data.version))
+      .catch(() => setPromptVersion('v4.3'))
+  }, [])
 
   const { startUpload } = useUploadThing('cvDocument', {
     onClientUploadComplete: async (res) => {
@@ -201,7 +210,7 @@ export function ChatInput({ onSend, disabled, cvId }: ChatInputProps) {
       </div>
 
       <p className="text-xs text-[#A3A3A3] text-center">
-        Enter para enviar · Shift+Enter nueva línea · PDF, Word o texto
+        Enter para enviar · Shift+Enter nueva línea · PDF, Word o texto · Octavia {promptVersion}
       </p>
     </div>
   )
