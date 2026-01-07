@@ -115,7 +115,7 @@ export default async function UserDashboard() {
               {cvs.map((cv: any) => (
                 <Link
                   key={cv.id}
-                  href={`/admin/cv-lab/${cv.id}`}
+                  href={`/dashboard/cvs/${cv.id}`}
                   className="block p-6 hover:bg-neutral-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
