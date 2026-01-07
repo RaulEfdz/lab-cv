@@ -18,6 +18,7 @@ import { History, Save, Download, ArrowLeft, FileText, GitBranch } from 'lucide-
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { LinkedInConnectButton } from './linkedin-connect-button'
+import { YappyDownloadButton } from '@/components/payments/YappyDownloadButton'
 import type {
   CvLabCv,
   CvLabVersion,
@@ -40,6 +41,7 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
   const [isVersionsOpen, setIsVersionsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [readinessScore, setReadinessScore] = useState(cv.readiness_score)
+  const [showYappyTest, setShowYappyTest] = useState(false)
 
   // Manual editing state
   const [isEditing, setIsEditing] = useState(false)
@@ -384,6 +386,17 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Exportar PDF
             </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowYappyTest(true)}
+              disabled={!currentCvJson}
+              className="h-8 border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Pagar y descargar
+            </Button>
           </div>
         </div>
       </header>
@@ -423,6 +436,41 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
         currentVersionId={currentVersionId}
         onSelectVersion={handleSelectVersion}
       />
+
+      {/* Yappy Test Modal */}
+      {showYappyTest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Pagar y descargar con Yappy</h3>
+              <button
+                onClick={() => setShowYappyTest(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Completa el pago con Yappy para descargar tu CV. Los admins pueden probar el flujo completo aquí.
+            </p>
+            <YappyDownloadButton
+              cvId={cv.id}
+              cvTitle={cv.title}
+              hasAccess={false}
+              onSuccess={() => {
+                toast.success('Pago completado exitosamente')
+                setShowYappyTest(false)
+              }}
+              onError={(error) => {
+                toast.error(error)
+              }}
+              onCancel={() => {
+                toast.info('Pago cancelado')
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

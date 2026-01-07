@@ -133,19 +133,41 @@ export function PaperPreview({
 
       <PagePaper
         variant="default"
-        className={`min-h-[297mm] transition-all duration-300 ${
-          isEditing
-            ? 'ring-2 ring-blue-500 ring-offset-2'
-            : isUpdating
+        className={`min-h-[297mm] transition-all duration-300 relative overflow-hidden ${isEditing
+          ? 'ring-2 ring-blue-500 ring-offset-2'
+          : isUpdating
             ? 'ring-2 ring-green-500 ring-offset-2 scale-[1.01]'
             : ''
-        }`}
+          }`}
       >
-        {isEditing && onEditChange ? (
-          <CvEditor cvJson={cvJson} onChange={onEditChange} />
-        ) : (
-          <CvRenderer cvJson={cvJson} />
-        )}
+        {/* Watermark - Only visible in browser preview, NOT in downloaded PDF */}
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          style={{ mixBlendMode: 'multiply' }}
+        >
+          <div
+            className="text-gray-300 font-bold select-none"
+            style={{
+              fontSize: '140px',
+              transform: 'rotate(-45deg)',
+              whiteSpace: 'nowrap',
+              letterSpacing: '30px',
+              textTransform: 'uppercase',
+              opacity: 0.5,
+            }}
+          >
+            PREVIEW
+          </div>
+        </div>
+
+        {/* CV Content */}
+        <div className="relative z-0">
+          {isEditing && onEditChange ? (
+            <CvEditor cvJson={cvJson} onChange={onEditChange} />
+          ) : (
+            <CvRenderer cvJson={cvJson} />
+          )}
+        </div>
       </PagePaper>
 
       {/* Edit mode indicator */}

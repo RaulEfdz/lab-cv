@@ -17,10 +17,66 @@ export function ChatMessage({ message, cvId, isStreaming, isLastMessage }: ChatM
 
   // Format the message content
   const formatContent = (content: string) => {
-    // Remove cv_update blocks from display
-    let cleanContent = content.replace(/```cv_update[\s\S]*?```/g, '').trim()
-    cleanContent = cleanContent.replace(/```json\s*\{[\s\S]*?"section"[\s\S]*?\}```/g, '').trim()
-    cleanContent = cleanContent.replace(/\{\s*"section"\s*:[\s\S]*?"action"\s*:[\s\S]*?\}/g, '').trim()
+    let cleanContent = content
+
+    // 1. Remove all code blocks (```...```)
+    cleanContent = cleanContent.replace(/```[\s\S]*?```/g, '').trim()
+
+    // 2. Try to detect and remove CV update JSON objects
+    // This function finds matching braces and checks if content looks like CV update JSON
+    const removeJsonObjects = (text: string): string => {
+      const lines = text.split('\n')
+      const filteredLines: string[] = []
+      let inJson = false
+      let braceCount = 0
+      let jsonBuffer = ''
+
+      for (const line of lines) {
+        // Detect start of JSON object
+        if (!inJson && line.trim().startsWith('{')) {
+          inJson = true
+          braceCount = 0
+          jsonBuffer = ''
+        }
+
+        if (inJson) {
+          jsonBuffer += line + '\n'
+          // Count braces to find end of JSON
+          for (const char of line) {
+            if (char === '{') braceCount++
+            if (char === '}') braceCount--
+          }
+
+          // When braces balance, check if this is a CV update JSON
+          if (braceCount === 0) {
+            // Check if JSON contains CV update markers
+            const isCvUpdate =
+              jsonBuffer.includes('"action"') ||
+              (jsonBuffer.includes('"section"') && jsonBuffer.includes('"header"')) ||
+              (jsonBuffer.includes('"experience"') && jsonBuffer.includes('"education"')) ||
+              jsonBuffer.includes('"readinessScore"') ||
+              jsonBuffer.includes('"feedback"')
+
+            if (!isCvUpdate) {
+              // Not a CV update, keep the text
+              filteredLines.push(jsonBuffer.trim())
+            }
+            // If it is a CV update, we skip it (don't push to filteredLines)
+
+            // Reset for next potential JSON
+            inJson = false
+            jsonBuffer = ''
+          }
+        } else {
+          // Not in JSON, keep the line
+          filteredLines.push(line)
+        }
+      }
+
+      return filteredLines.join('\n')
+    }
+
+    cleanContent = removeJsonObjects(cleanContent).trim()
 
     if (!cleanContent || cleanContent.length < 3) {
       return 'CV actualizado.'
