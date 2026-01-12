@@ -174,9 +174,9 @@ export default function LoginPage() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
-          <div>
-            <span className="text-2xl font-bold tracking-tight">CV Lab</span>
-          </div>
+          <Link href="/">
+            <span className="text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">CV Lab</span>
+          </Link>
 
           <div className="space-y-6">
             <h1 className="text-5xl font-bold tracking-tight leading-tight">
@@ -197,11 +197,11 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="lg:hidden mb-12 flex justify-center">
-            <div className="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center">
+          <Link href="/" className="lg:hidden mb-12 flex justify-center">
+            <div className="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
               <span className="text-white text-sm font-bold">CV</span>
             </div>
-          </div>
+          </Link>
 
           <div className="space-y-2 mb-8">
             <div className="flex items-center gap-2 mb-4">
