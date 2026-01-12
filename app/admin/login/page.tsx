@@ -183,6 +183,15 @@ export default function AdminLoginPage() {
             <p className="text-lg text-neutral-400 max-w-md">
               Plataforma inteligente para crear CVs profesionales optimizados con inteligencia artificial.
             </p>
+            <Link href="/">
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 backdrop-blur-sm"
+              >
+                Ver más información
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
 
           <div className="text-sm text-neutral-500">
