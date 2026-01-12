@@ -109,12 +109,24 @@ export default function LoginPage() {
     try {
       const trimmedEmail = email.trim()
 
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(trimmedEmail)) {
+        throw new Error("El formato del email no es válido")
+      }
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: trimmedEmail,
       })
 
-      if (error) throw error
+      if (error) {
+        // Si el error es de email inválido, significa que el usuario no se registró
+        if (error.message.includes("invalid") || error.message.includes("Invalid")) {
+          throw new Error("Este email no está registrado. Por favor, regístrate primero en 'Crear cuenta'.")
+        }
+        throw error
+      }
 
       setSuccess("Email de verificación enviado. Revisa tu bandeja de entrada.")
       setShowResendEmail(false)
