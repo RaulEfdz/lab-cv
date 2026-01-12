@@ -50,8 +50,10 @@ export default function AdminLoginPage() {
     setShowResendEmail(false)
 
     try {
+      const trimmedEmail = email.trim()
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: trimmedEmail,
         password,
       })
 
@@ -75,7 +77,7 @@ export default function AdminLoginPage() {
       const { data: adminData, error: adminError } = await supabase
         .from("admins")
         .select("*")
-        .eq("email", email)
+        .eq("email", trimmedEmail)
         .single()
 
       if (adminError || !adminData) {
@@ -103,9 +105,11 @@ export default function AdminLoginPage() {
     setSuccess(null)
 
     try {
+      const trimmedEmail = email.trim()
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email,
+        email: trimmedEmail,
       })
 
       if (error) throw error
@@ -131,7 +135,9 @@ export default function AdminLoginPage() {
     setSuccess(null)
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const trimmedEmail = email.trim()
+
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: `${window.location.origin}/auth/callback`,
       })
 

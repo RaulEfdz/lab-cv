@@ -44,9 +44,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
+      const trimmedEmail = email.trim()
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: trimmedEmail,
         password,
       })
 
