@@ -1,20 +1,22 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { FileText } from 'lucide-react'
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ArrowRight, Loader2, KeyRound } from "lucide-react"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   // Capturar errores del hash de la URL (ej: #error=access_denied&error_code=otp_expired)
   useEffect(() => {
@@ -39,11 +41,11 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    const supabase = createClient()
+    setIsLoading(true)
+    setError(null)
 
     try {
-      const supabase = createClient()
       const trimmedEmail = email.trim()
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -68,91 +70,194 @@ export default function LoginPage() {
           router.push('/dashboard')
         }
       }
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Error al iniciar sesión")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError("Por favor ingresa tu email primero")
+      return
+    }
+
+    const supabase = createClient()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const trimmedEmail = email.trim()
+
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      })
+
+      if (error) throw error
+
+      setError(null)
+      alert("Email de recuperación enviado. Revisa tu bandeja de entrada.")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Error al enviar email de recuperación")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Iniciar Sesión</h1>
-          <p className="text-neutral-600">
-            Accede a tu cuenta de Lab CV
-          </p>
+    <div className="min-h-screen flex bg-[#FAFAFA]">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-neutral-900 relative overflow-hidden">
+        {/* Blob gradient */}
+        <div className="absolute inset-0">
+          <div
+            className="absolute w-[140%] h-[140%] -top-[20%] -left-[20%]"
+            style={{
+              background: `
+                radial-gradient(ellipse at 30% 40%, #4A90D9 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, #F67300 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, #7BB3E0 0%, transparent 60%)
+              `,
+              filter: 'blur(80px)',
+            }}
+          />
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {error}
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          <div>
+            <span className="text-2xl font-bold tracking-tight">CV Lab</span>
+          </div>
+
+          <div className="space-y-6">
+            <h1 className="text-5xl font-bold tracking-tight leading-tight">
+              Crea tu CV<br />con IA
+            </h1>
+            <p className="text-lg text-neutral-400 max-w-md">
+              Plataforma inteligente para crear CVs profesionales optimizados con inteligencia artificial.
+            </p>
+          </div>
+
+          <div className="text-sm text-neutral-500">
+            © 2026 CV Lab
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Login form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-12 flex justify-center">
+            <div className="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm font-bold">CV</span>
             </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-11"
-            />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Tu contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="h-11"
-            />
+          <div className="space-y-2 mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1.5 h-6 bg-neutral-900 rounded-full" />
+              <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Iniciar Sesión</span>
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              Bienvenido
+            </h2>
+            <p className="text-neutral-500">
+              Ingresa tus credenciales para continuar
+            </p>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div></div>
-            <Link href="/reset-password" className="text-orange-600 hover:text-orange-700">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@email.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 px-4 bg-white border-neutral-200 focus-visible:border-neutral-400 focus-visible:ring-neutral-400/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Contraseña
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 px-4 bg-white border-neutral-200 focus-visible:border-neutral-400 focus-visible:ring-neutral-400/20"
+              />
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-3 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg text-sm">
+                <div className="w-1 h-1 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg transition-colors"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                <>
+                  Iniciar Sesión
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={isLoading}
+              variant="ghost"
+              className="w-full h-10 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 font-medium rounded-lg transition-colors"
+            >
+              <KeyRound className="w-4 h-4" />
               ¿Olvidaste tu contraseña?
+            </Button>
+          </form>
+
+          <div className="mt-6">
+            <Link
+              href="/signup"
+              className="flex items-center justify-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+            >
+              ¿No tienes cuenta? Regístrate aquí
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium"
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </Button>
-        </form>
-
-        {/* Footer */}
-        <div className="mt-6 text-center text-sm text-neutral-600">
-          ¿No tienes cuenta?{' '}
-          <Link href="/signup" className="text-orange-600 hover:text-orange-700 font-medium">
-            Crear cuenta
-          </Link>
-        </div>
-
-        {/* Admin Link */}
-        <div className="mt-4 pt-4 border-t border-neutral-200 text-center text-xs text-neutral-500">
-          ¿Eres administrador?{' '}
-          <Link href="/admin/login" className="text-neutral-700 hover:text-neutral-900 font-medium">
-            Acceso Admin
-          </Link>
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <div className="w-1 h-1 bg-neutral-900 rounded-full" />
+            <p className="text-sm text-neutral-400">
+              CV Lab - Plataforma SaaS
+            </p>
+            <div className="w-1 h-1 bg-neutral-900 rounded-full" />
+          </div>
         </div>
       </div>
     </div>
