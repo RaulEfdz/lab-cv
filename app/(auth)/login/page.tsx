@@ -9,13 +9,15 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowRight, Loader2, KeyRound } from "lucide-react"
+import { ArrowRight, Loader2, KeyRound, Mail } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showResendEmail, setShowResendEmail] = useState(false)
   const router = useRouter()
 
   // Capturar errores del hash de la URL (ej: #error=access_denied&error_code=otp_expired)
@@ -44,6 +46,8 @@ export default function LoginPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
+    setShowResendEmail(false)
 
     try {
       const trimmedEmail = email.trim()
@@ -53,7 +57,21 @@ export default function LoginPage() {
         password,
       })
 
-      if (signInError) throw signInError
+      if (signInError) {
+        // Detectar si el email no está confirmado
+        if (signInError.message.includes("Email not confirmed")) {
+          setShowResendEmail(true)
+          throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
+        }
+        throw signInError
+      }
+
+      // Verificar si el email está confirmado
+      if (data.user && !data.user.email_confirmed_at) {
+        setShowResendEmail(true)
+        await supabase.auth.signOut()
+        throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
+      }
 
       if (data.user) {
         // Obtener el rol del usuario desde profiles
@@ -72,6 +90,36 @@ export default function LoginPage() {
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Error al iniciar sesión")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Por favor ingresa tu email primero")
+      return
+    }
+
+    const supabase = createClient()
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const trimmedEmail = email.trim()
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: trimmedEmail,
+      })
+
+      if (error) throw error
+
+      setSuccess("Email de verificación enviado. Revisa tu bandeja de entrada.")
+      setShowResendEmail(false)
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Error al reenviar email")
     } finally {
       setIsLoading(false)
     }
@@ -209,6 +257,35 @@ export default function LoginPage() {
                 <div className="w-1 h-1 rounded-full bg-red-500 mt-1.5 shrink-0" />
                 {error}
               </div>
+            )}
+
+            {success && (
+              <div className="flex items-start gap-3 bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-lg text-sm">
+                <div className="w-1 h-1 rounded-full bg-green-500 mt-1.5 shrink-0" />
+                {success}
+              </div>
+            )}
+
+            {showResendEmail && (
+              <Button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isLoading}
+                variant="outline"
+                className="w-full h-12 border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-medium rounded-lg transition-colors"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Reenviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    Reenviar email de verificación
+                  </>
+                )}
+              </Button>
             )}
 
             <Button
