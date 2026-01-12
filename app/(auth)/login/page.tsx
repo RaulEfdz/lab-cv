@@ -63,6 +63,10 @@ export default function LoginPage() {
           setShowResendEmail(true)
           throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
         }
+
+        // Si el error es de credenciales inválidas, ocultar el botón de reenvío
+        // porque probablemente el email no existe o la contraseña es incorrecta
+        setShowResendEmail(false)
         throw signInError
       }
 
@@ -101,7 +105,6 @@ export default function LoginPage() {
       return
     }
 
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
     setSuccess(null)
@@ -115,17 +118,19 @@ export default function LoginPage() {
         throw new Error("El formato del email no es válido")
       }
 
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: trimmedEmail,
+      // Llamar a nuestra API route personalizada que usa la admin API de Supabase
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: trimmedEmail }),
       })
 
-      if (error) {
-        // Si el error es de email inválido, significa que el usuario no se registró
-        if (error.message.includes("invalid") || error.message.includes("Invalid")) {
-          throw new Error("Este email no está registrado. Por favor, regístrate primero en 'Crear cuenta'.")
-        }
-        throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al reenviar email de verificación')
       }
 
       setSuccess("Email de verificación enviado. Revisa tu bandeja de entrada.")
