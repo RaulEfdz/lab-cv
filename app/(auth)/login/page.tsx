@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Capturar errores del hash de la URL (ej: #error=access_denied&error_code=otp_expired)
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1))
+      const errorCode = params.get('error_code')
+      const errorDescription = params.get('error_description')
+
+      if (errorCode === 'otp_expired') {
+        setError('El enlace de verificación ha expirado. Por favor, solicita un nuevo enlace de recuperación de contraseña.')
+      } else if (errorDescription) {
+        setError(decodeURIComponent(errorDescription))
+      } else if (params.get('error')) {
+        setError('Error de autenticación. Por favor, intenta nuevamente.')
+      }
+
+      // Limpiar el hash de la URL
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
