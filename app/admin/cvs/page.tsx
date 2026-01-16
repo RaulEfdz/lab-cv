@@ -18,10 +18,14 @@ export default async function CVsPage() {
     redirect("/admin/login")
   }
 
-  // Verificar si es admin
-  const { data: adminData } = await supabase.from("admins").select("*").eq("id", user.id).single()
+  // Verificar si es admin usando profiles.role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single()
 
-  if (!adminData) {
+  if (!profile || profile.role !== 'admin') {
     redirect("/admin/login")
   }
 

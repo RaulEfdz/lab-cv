@@ -23,18 +23,8 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get CV and verify it exists
+    // RLS policy automáticamente valida que user_id = auth.uid()
     const { data: cv, error: cvError } = await supabase
       .from('cv_lab_cvs')
       .select('*')
@@ -141,18 +131,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get body
+    // RLS policy valida que solo el dueño o admins pueden actualizar versiones
     const body = await request.json()
     const { cvJson, versionId } = body
 
@@ -230,18 +210,8 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get all versions
+    // RLS automáticamente filtra versiones por CV accesible al usuario
     const { data: versions, error } = await supabase
       .from('cv_lab_versions')
       .select('*')

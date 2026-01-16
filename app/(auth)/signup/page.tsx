@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { validateSignupForm } from '@/lib/utils/auth-validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,7 @@ export default function SignUpPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -24,14 +26,20 @@ export default function SignUpPage() {
     setError('')
 
     try {
+      // Validar todos los campos
+      const validation = validateSignupForm(email, password, confirmPassword, fullName)
+      if (!validation.isValid) {
+        throw new Error(validation.error)
+      }
+
       const supabase = createClient()
 
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -129,11 +137,27 @@ export default function SignUpPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
+              className="h-11"
+            />
+            <p className="text-xs text-neutral-500">
+              Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Repite tu contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
               className="h-11"
             />
           </div>

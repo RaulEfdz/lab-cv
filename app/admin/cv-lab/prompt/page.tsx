@@ -13,13 +13,14 @@ export default async function CvLabPromptPage() {
     redirect('/admin/login')
   }
 
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('id')
+  // Verificar admin usando profiles.role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!admin) {
+  if (!profile || profile.role !== 'admin') {
     redirect('/admin/login')
   }
 

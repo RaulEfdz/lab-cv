@@ -83,10 +83,9 @@ RETURNS TRIGGER AS $$
 DECLARE
   user_role TEXT := 'user';
 BEGIN
-  -- Si el email es raulefdz@gmail.com, asignar rol de admin
-  IF NEW.email = 'raulefdz@gmail.com' THEN
-    user_role := 'admin';
-  END IF;
+  -- Por defecto, todos los usuarios nuevos tienen rol 'user'
+  -- Los admins deben ser promovidos manualmente por otro admin
+  -- o asignados en el registro inicial del sistema
 
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (

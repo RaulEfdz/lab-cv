@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
 export default function HomePage() {
-  // Redirect to public login
-  redirect('/login')
+  // Redirect to landing page
+  redirect('/landing')
 }

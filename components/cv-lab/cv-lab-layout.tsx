@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChatPanel, ChatPanelRef } from './chat-panel'
 import { PaperPreview } from './paper-preview'
 import { VersionsDrawer } from './versions-drawer'
@@ -14,11 +14,19 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { History, Save, Download, ArrowLeft, FileText, GitBranch } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu'
+import { History, Save, Download, ArrowLeft, FileText, GitBranch, MessageSquare, Menu, MoreVertical } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { LinkedInConnectButton } from './linkedin-connect-button'
 import { YappyDownloadButton } from '@/components/payments/YappyDownloadButton'
+import { cn } from '@/lib/utils'
 import type {
   CvLabCv,
   CvLabVersion,
@@ -38,6 +46,7 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
   const [currentVersionId, setCurrentVersionId] = useState(
     versions[0]?.id || null
   )
+  const [activeTab, setActiveTab] = useState<'chat' | 'preview'>('chat')
   const [isVersionsOpen, setIsVersionsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [readinessScore, setReadinessScore] = useState(cv.readiness_score)
@@ -178,7 +187,7 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
                   } else if (data.type === 'cv_update') {
                     newScore = data.newScore || readinessScore
                   }
-                } catch {}
+                } catch { }
               }
             }
           }
@@ -190,6 +199,8 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
               cv_id: cv.id,
               role: 'assistant',
               content: assistantMessage,
+              tokens_in: 0,
+              tokens_out: 0,
               created_at: new Date().toISOString()
             }
             setMessages(prev => [...prev, ackMessage])
@@ -270,61 +281,63 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* Header bar - Improved UI */}
-      <header className="flex-none border-b bg-white">
+    <div className="flex flex-col h-screen overflow-hidden bg-white">
+      {/* Header bar - Responsive */}
+      <header className="flex-none border-b bg-white z-20">
         <div className="flex items-center justify-between h-14 px-4 relative">
           {/* Left section: Navigation + Title */}
-          <div className="flex items-center gap-3">
-            <Link href="/admin/cv-lab">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <Link href="/admin/cv-lab" className="flex-none">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
 
-            <div className="h-6 w-px bg-neutral-200" />
+            <div className="h-6 w-px bg-neutral-200 flex-none hidden md:block" />
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-neutral-400" />
-                <h1 className="font-medium text-neutral-900 truncate max-w-[200px]">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <FileText className="h-4 w-4 text-neutral-400 flex-none hidden md:block" />
+                <h1 className="font-medium text-neutral-900 truncate max-w-[150px] md:max-w-[200px]">
                   {cv.title}
                 </h1>
               </div>
 
-              <Badge
-                variant="outline"
-                className={
-                  cv.status === 'CLOSED' ? 'border-green-200 bg-green-50 text-green-700' :
-                  cv.status === 'READY' ? 'border-blue-200 bg-blue-50 text-blue-700' :
-                  'border-neutral-200 bg-neutral-50 text-neutral-600'
-                }
-              >
-                {cv.status === 'CLOSED' ? 'Cerrado' :
-                 cv.status === 'READY' ? 'Listo' : 'Borrador'}
-              </Badge>
+              <div className="hidden md:flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={
+                    cv.status === 'CLOSED' ? 'border-green-200 bg-green-50 text-green-700' :
+                      cv.status === 'READY' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                        'border-neutral-200 bg-neutral-50 text-neutral-600'
+                  }
+                >
+                  {cv.status === 'CLOSED' ? 'Cerrado' :
+                    cv.status === 'READY' ? 'Listo' : 'Borrador'}
+                </Badge>
 
-              {cv.target_role && (
-                <>
-                  <span className="text-neutral-300">•</span>
-                  <span className="text-sm text-neutral-500 truncate max-w-[150px]">
-                    {cv.target_role}
-                  </span>
-                </>
-              )}
+                {cv.target_role && (
+                  <>
+                    <span className="text-neutral-300">•</span>
+                    <span className="text-sm text-neutral-500 truncate max-w-[150px]">
+                      {cv.target_role}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Center section: Readiness Score */}
-          <div className="absolute left-1/2 -translate-x-1/2">
+          {/* Center section: Readiness Score (Desktop only) */}
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
             <ReadinessBadge
               score={readinessScore}
               onClick={readinessScore < 100 ? handleReadinessClick : undefined}
             />
           </div>
 
-          {/* Right section: Actions */}
-          <div className="flex items-center gap-2">
+          {/* Right section: Actions (Desktop) */}
+          <div className="hidden md:flex items-center gap-2">
             {/* LinkedIn */}
             <LinkedInConnectButton
               cvId={cv.id}
@@ -384,7 +397,7 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
               className="h-8 bg-orange-500 hover:bg-orange-600 hover:scale-105 shadow-sm cursor-pointer transition-all duration-200"
             >
               <Download className="h-3.5 w-3.5 mr-1.5" />
-              Exportar PDF
+              Exportar
             </Button>
 
             <Button
@@ -395,16 +408,57 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
               className="h-8 border-purple-300 text-purple-700 hover:bg-purple-50"
             >
               <Download className="h-3.5 w-3.5 mr-1.5" />
-              Pagar y descargar
+              Pagar
             </Button>
+          </div>
+
+          {/* Mobile Actions Menu */}
+          <div className="flex md:hidden items-center gap-2">
+            <div
+              className="scale-90 origin-right transition-transform active:scale-95"
+              onClick={readinessScore < 100 ? handleReadinessClick : undefined}
+            >
+              <ReadinessBadge score={readinessScore} size="sm" />
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleSaveVersion} disabled={isSaving || !currentCvJson}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar Versión
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadPdf} disabled={!currentCvJson}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsVersionsOpen(true)}>
+                  <History className="h-4 w-4 mr-2" />
+                  Historial de Versiones
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowYappyTest(true)}>
+                  <Download className="h-4 w-4 mr-2 text-purple-600" />
+                  <span className="text-purple-600">Pagar y Descargar</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
 
-      {/* Main content - split view with independent scrolls */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Chat panel - left side with its own scroll */}
-        <div className="w-[45%] min-w-[400px] border-r flex flex-col bg-neutral-50 overflow-hidden">
+      {/* Main content - split view on desktop, tabbed on mobile */}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {/* Chat panel */}
+        <div className={cn(
+          "flex flex-col bg-neutral-50 overflow-hidden transition-all duration-300",
+          "w-full md:w-[45%] md:min-w-[400px] md:border-r z-10",
+          activeTab === 'chat' ? 'flex absolute inset-0 md:relative' : 'hidden md:flex'
+        )}>
           <ChatPanel
             ref={chatPanelRef}
             cvId={cv.id}
@@ -415,8 +469,12 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
           />
         </div>
 
-        {/* Paper preview - right side with its own scroll */}
-        <div className="flex-1 overflow-y-auto bg-neutral-100 p-6 pt-16">
+        {/* Paper preview */}
+        <div className={cn(
+          "flex-1 overflow-auto bg-neutral-100 transition-all duration-300",
+          "p-4 md:p-6 md:pt-16",
+          activeTab === 'preview' ? 'block absolute inset-0 md:relative' : 'hidden md:block'
+        )}>
           <PaperPreview
             cvJson={isEditing ? editedCvJson : currentCvJson}
             isEditing={isEditing}
@@ -425,6 +483,35 @@ export function CvLabLayout({ cv, versions: initialVersions, messages: initialMe
             onEditSave={handleEditSave}
             onEditCancel={handleEditCancel}
           />
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="md:hidden flex-none bg-white border-t px-6 py-2 pb-safe">
+        <div className="flex items-center justify-around">
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={cn(
+              "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors w-20",
+              activeTab === 'chat' ? "text-blue-600 bg-blue-50" : "text-neutral-500 hover:bg-neutral-50"
+            )}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Chat</span>
+          </button>
+
+          <div className="w-px h-8 bg-neutral-100" />
+
+          <button
+            onClick={() => setActiveTab('preview')}
+            className={cn(
+              "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors w-20",
+              activeTab === 'preview' ? "text-blue-600 bg-blue-50" : "text-neutral-500 hover:bg-neutral-50"
+            )}
+          >
+            <FileText className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Vista Previa</span>
+          </button>
         </div>
       </div>
 

@@ -21,21 +21,11 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get version ID from query params (optional)
     const versionId = request.nextUrl.searchParams.get('versionId')
 
     // Get CV with versions
+    // RLS policy automáticamente filtra por user_id
     const { data: cv, error: cvError } = await supabase
       .from('cv_lab_cvs')
       .select('*, cv_lab_versions(*)')
@@ -128,18 +118,8 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Verify CV exists
+    // RLS policy automáticamente valida acceso al CV
     const { data: cv } = await supabase
       .from('cv_lab_cvs')
       .select('id')

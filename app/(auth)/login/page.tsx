@@ -151,6 +151,7 @@ export default function LoginPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
       const trimmedEmail = email.trim()
@@ -161,8 +162,7 @@ export default function LoginPage() {
 
       if (error) throw error
 
-      setError(null)
-      alert("Email de recuperación enviado. Revisa tu bandeja de entrada.")
+      setSuccess("Email de recuperación enviado. Revisa tu bandeja de entrada.")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Error al enviar email de recuperación")
     } finally {

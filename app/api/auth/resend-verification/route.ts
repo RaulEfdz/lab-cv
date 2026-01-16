@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/utils/rate-limit'
 
 // Crear cliente de Supabase con service key para operaciones admin
 const supabaseAdmin = createClient(
@@ -33,23 +34,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar el usuario en auth.users
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers()
+    // Rate limiting basado en IP y email
+    const ip = getClientIP(request.headers)
+    const identifier = `resend:${ip}:${email.toLowerCase()}`
 
-    if (userError) {
+    const rateLimit = checkRateLimit(
+      identifier,
+      RATE_LIMITS.RESEND_EMAIL.maxAttempts,
+      RATE_LIMITS.RESEND_EMAIL.windowMs
+    )
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Demasiados intentos. Intenta de nuevo en ${rateLimit.retryAfter} segundos.`,
+          retryAfter: rateLimit.retryAfter
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimit.retryAfter?.toString() || '900'
+          }
+        }
+      )
+    }
+
+    // Buscar el usuario por email en la tabla profiles (más eficiente que listUsers)
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Este email no está registrado. Por favor, regístrate primero en "Crear cuenta".' },
+        { status: 404 }
+      )
+    }
+
+    // Obtener información del usuario en auth.users
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+
+    if (userError || !user) {
       console.error('Error al buscar usuario:', userError)
       return NextResponse.json(
         { error: 'Error al buscar usuario' },
         { status: 500 }
-      )
-    }
-
-    const user = userData.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Este email no está registrado. Por favor, regístrate primero en "Crear cuenta".' },
-        { status: 404 }
       )
     }
 
@@ -61,26 +92,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generar un nuevo link de verificación usando admin API
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+    // Usar método resend para reenviar email de confirmación
+    // Nota: Este método funciona porque el usuario ya existe en auth.users
+    const { error } = await supabaseAdmin.auth.resend({
       type: 'signup',
       email: email,
     })
 
     if (error) {
-      console.error('Error al generar link de verificación:', error)
+      console.error('Error al reenviar email de verificación:', error)
       return NextResponse.json(
-        { error: 'Error al generar link de verificación' },
+        { error: 'Error al reenviar email de verificación' },
         { status: 500 }
       )
     }
 
-    // En este punto, Supabase debería haber enviado el email automáticamente
-    // Si no lo hace, podríamos implementar el envío manual aquí usando Resend o similar
-
     return NextResponse.json({
       success: true,
-      message: 'Email de verificación enviado exitosamente'
+      message: 'Email de verificación reenviado exitosamente'
     })
 
   } catch (error) {

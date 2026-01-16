@@ -25,10 +25,14 @@ export default async function AdminDashboard() {
     redirect("/admin/login")
   }
 
-  // Verificar si es admin
-  const { data: adminData } = await supabase.from("admins").select("*").eq("id", user.id).single()
+  // Verificar si es admin usando profiles.role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single()
 
-  if (!adminData) {
+  if (!profile || profile.role !== 'admin') {
     redirect("/admin/login")
   }
 
@@ -84,7 +88,7 @@ export default async function AdminDashboard() {
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Dashboard - CV Lab</h1>
-          <p className="text-neutral-500 mt-1">Bienvenido, {adminData.full_name || adminData.email.split("@")[0]}</p>
+          <p className="text-neutral-500 mt-1">Bienvenido, {profile.full_name || profile.email.split("@")[0]}</p>
         </div>
 
         {/* Analytics Chart Section */}

@@ -19,18 +19,9 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    // Get CV with versions and messages
+    // Las políticas RLS automáticamente filtran:
+    // - Usuarios ven solo sus propios CVs (WHERE user_id = auth.uid())
+    // - Admins ven todos los CVs (WHERE is_admin())
     const { data: cv, error } = await supabase
       .from('cv_lab_cvs')
       .select(`
@@ -68,17 +59,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     const body = await request.json()
     const allowedFields = ['title', 'target_role', 'industry', 'language', 'status', 'readiness_score']
 
@@ -94,6 +74,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 })
     }
 
+    // RLS policy valida que user_id = auth.uid() (usuarios regulares)
+    // o permite acceso completo (admins)
     const { data: cv, error } = await supabase
       .from('cv_lab_cvs')
       .update(updateData)
@@ -127,18 +109,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get assets to delete from storage (if using UploadThing)
+    // RLS automáticamente filtra por user_id
     const { data: assets } = await supabase
       .from('cv_lab_assets')
       .select('file_key')
@@ -160,6 +132,7 @@ export async function DELETE(
     }
 
     // Delete the CV (cascades to versions, messages, assets)
+    // RLS policy valida que user_id = auth.uid() antes de permitir DELETE
     const { error } = await supabase
       .from('cv_lab_cvs')
       .delete()

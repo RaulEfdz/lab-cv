@@ -29,22 +29,9 @@ export async function POST(
     }
     console.log('User authenticated:', user.id)
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      console.log('User is not admin')
-      return new Response(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-    console.log('Admin verified')
-
+    // RLS policies automáticamente permiten:
+    // - Usuarios regulares: chatear solo con sus propios CVs
+    // - Admins: chatear con cualquier CV
     const body = await request.json()
     console.log('Request body:', body)
     const { message } = body

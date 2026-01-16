@@ -17,13 +17,14 @@ async function verifyAdmin() {
     throw new Error("No autenticado")
   }
 
-  const { data: admin, error: adminError } = await supabase
-    .from("admins")
-    .select("id")
+  // Verificar rol de admin en profiles
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
     .eq("id", user.id)
     .single()
 
-  if (adminError || !admin) {
+  if (profileError || !profile || profile.role !== 'admin') {
     throw new Error("No autorizado como administrador")
   }
 

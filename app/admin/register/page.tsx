@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import { validateSignupForm } from "@/lib/utils/auth-validation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,52 +26,41 @@ export default function AdminRegisterPage() {
     setIsLoading(true)
     setError(null)
 
-    // Validaciones
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
-      setIsLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
-      setIsLoading(false)
-      return
-    }
-
-    const supabase = createClient()
-
     try {
+      // Validar todos los campos
+      const validation = validateSignupForm(email, password, confirmPassword, fullName)
+      if (!validation.isValid) {
+        throw new Error(validation.error)
+      }
+
+      const supabase = createClient()
+
       // 1. Crear usuario en auth.users
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/admin/dashboard`,
         },
       })
 
       if (signUpError) throw signUpError
       if (!authData.user) throw new Error("No se pudo crear el usuario")
 
-      // 2. El registro en la tabla admins se hace automáticamente via trigger de base de datos
-      // Ver: scripts/005_auto_create_admin_trigger.sql
+      // 2. El registro en profiles se hace automáticamente via trigger
+      // Por defecto, se crea con rol 'user'
+      // Un admin existente debe promover manualmente el rol a 'admin'
 
-      // 3. Hacer login automáticamente
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInError) {
-        // Si falla el login, redirigir a login
-        router.push("/admin/login?message=Cuenta creada. Por favor inicia sesión.")
+      // 3. Si requiere confirmación de email, mostrar mensaje
+      if (!authData.session) {
+        router.push("/admin/login?message=Cuenta creada. Por favor confirma tu email antes de iniciar sesión.")
         return
       }
 
-      // 4. Redirigir al dashboard
+      // 4. Si no requiere confirmación (autoconfirm está activado), redirigir
       router.push("/admin/dashboard")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Error al crear la cuenta")
@@ -188,12 +178,16 @@ export default function AdminRegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12 px-4 bg-white border-neutral-200 focus-visible:border-neutral-400 focus-visible:ring-neutral-400/20"
+                minLength={8}
               />
+              <p className="text-xs text-neutral-500">
+                Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
+              </p>
             </div>
 
             <div className="space-y-2">

@@ -21,18 +21,8 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     // Get CV and verify it exists
+    // RLS policy automáticamente valida que user_id = auth.uid()
     const { data: cv, error: cvError } = await supabase
       .from('cv_lab_cvs')
       .select('*')
@@ -127,17 +117,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
+    // RLS policy automáticamente filtra assets por CV accesible al usuario
     const { data: assets, error } = await supabase
       .from('cv_lab_assets')
       .select('*')
@@ -171,17 +151,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
+    // RLS policy valida que solo el dueño o admins pueden eliminar assets
     const assetId = request.nextUrl.searchParams.get('assetId')
     if (!assetId) {
       return NextResponse.json({ error: 'assetId es requerido' }, { status: 400 })

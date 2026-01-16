@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { EMPTY_CV_JSON } from '@/lib/types/cv-lab'
 
 // GET /api/cv-lab - List all CVs
+// RLS automáticamente filtra por user_id (usuarios regulares)
+// o permite acceso completo (admins)
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -12,18 +14,9 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    // Get all CVs with version count and message count
+    // Las políticas RLS automáticamente:
+    // - Permiten a usuarios ver solo sus CVs (WHERE user_id = auth.uid())
+    // - Permiten a admins ver todos los CVs (WHERE is_admin())
     const { data: cvs, error } = await supabase
       .from('cv_lab_cvs')
       .select(`
@@ -46,23 +39,13 @@ export async function GET() {
 }
 
 // POST /api/cv-lab - Create new CV
+// RLS automáticamente valida que user_id = auth.uid() en INSERT
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    // Verify admin access
-    const { data: admin } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!admin) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -73,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El título es requerido' }, { status: 400 })
     }
 
-    // Create the CV
+    // Create the CV - RLS policy valida que user_id = auth.uid()
     const { data: cv, error: cvError } = await supabase
       .from('cv_lab_cvs')
       .insert({

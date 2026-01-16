@@ -73,16 +73,21 @@ export default function AdminLoginPage() {
         throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
       }
 
-      // Verificar si el usuario es admin
-      const { data: adminData, error: adminError } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("email", trimmedEmail)
+      // Verificar si el usuario tiene rol de admin en profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
         .single()
 
-      if (adminError || !adminData) {
+      if (profileError || !profile) {
         await supabase.auth.signOut()
-        throw new Error("No tienes permisos de administrador")
+        throw new Error("No se pudo verificar tu perfil")
+      }
+
+      if (profile.role !== 'admin') {
+        await supabase.auth.signOut()
+        throw new Error("No tienes permisos de administrador. Esta página es solo para administradores.")
       }
 
       router.push("/admin/dashboard")
@@ -99,7 +104,6 @@ export default function AdminLoginPage() {
       return
     }
 
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
     setSuccess(null)
@@ -113,17 +117,19 @@ export default function AdminLoginPage() {
         throw new Error("El formato del email no es válido")
       }
 
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: trimmedEmail,
+      // Usar el mismo endpoint que el login de usuarios para consistencia
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: trimmedEmail }),
       })
 
-      if (error) {
-        // Si el error es de email inválido, significa que el usuario no se registró
-        if (error.message.includes("invalid") || error.message.includes("Invalid")) {
-          throw new Error("Este email no está registrado. Por favor, regístrate primero en 'Regístrate aquí'.")
-        }
-        throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al reenviar email de verificación')
       }
 
       setSuccess("Email de verificación enviado. Revisa tu bandeja de entrada.")
