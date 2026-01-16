@@ -15,118 +15,87 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-neutral-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-16">
-        <div className="text-center max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-4 py-2 mb-8">
-            <Sparkles className="w-4 h-4 text-orange-600" />
-            <span className="text-sm font-medium text-orange-900">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 lg:py-32 min-h-[700px] flex items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
+          {/* Left Column - Text Content */}
+          <div className="space-y-8">
+            {/* Label */}
+            <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
               Optimización de CV con IA
             </span>
+
+            {/* Headline */}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
+              CVs que consiguen mejores trabajos
+            </h1>
+
+            {/* Description */}
+            <div className="max-w-md space-y-3">
+              <p className="text-lg md:text-xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                OCTAVIA analiza tu CV con 15 criterios profesionales y te da un{' '}
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>readiness score en tiempo real</span>.
+              </p>
+              <p className="text-base" style={{ color: 'var(--text-muted)' }}>
+                Consigue 80+ puntos y aumenta tus posibilidades en 3x de pasar filtros ATS
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <Button
+                asChild
+                size="lg"
+                className="text-sm font-medium px-6 py-3 rounded-lg"
+                style={{ backgroundColor: 'var(--bg-dark)', color: 'var(--bg-surface)' }}
+              >
+                <Link href="/signup" className="inline-flex items-center justify-center">
+                  Crea tu CV gratis
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="text-sm font-medium px-6 py-3 rounded-lg border hover:border-[var(--accent-orange)] hover:text-[var(--accent-orange)] transition-colors"
+                style={{ borderColor: 'var(--border)' }}
+              >
+                <Link href="/login" className="inline-flex items-center justify-center">
+                  Ya tengo cuenta
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-6">
-            CVs que consiguen{' '}
-            <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-              mejores trabajos
-            </span>
-          </h1>
-
-          {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-neutral-600 mb-4 leading-relaxed">
-            OCTAVIA analiza tu CV con 15 criterios profesionales y te da un{' '}
-            <span className="font-semibold text-neutral-900">readiness score en tiempo real</span>.
-          </p>
-          <p className="text-lg text-neutral-500 mb-8">
-            Consigue 80+ puntos y aumenta tus posibilidades en 3x de pasar filtros ATS
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Button
-              asChild
-              size="lg"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg"
-            >
-              <Link href="/signup">
-                Crea tu CV gratis
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="px-8 py-6 text-lg">
-              <Link href="/login">
-                Ya tengo cuenta
-              </Link>
-            </Button>
-          </div>
-
-          {/* Readiness Score Demo Visual */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-neutral-600">Tu Readiness Score</span>
-              <Badge className="bg-green-500 text-white">Listo</Badge>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative w-24 h-24">
-                <svg className="transform -rotate-90 w-24 h-24">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="none"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#22c55e"
-                    strokeWidth="8"
-                    fill="none"
-                    strokeDasharray={`${(85 / 100) * 251.2} 251.2`}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-neutral-900">85</span>
-                </div>
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-green-600 mb-1">
-                  ¡Excelente! CV listo para aplicar
-                </p>
-                <p className="text-xs text-neutral-500">
-                  Tu CV tiene alta probabilidad de pasar filtros ATS
-                </p>
-              </div>
-            </div>
+          {/* Right Column - Blob Gradient Visual */}
+          <div className="hidden lg:block relative w-full h-[500px]">
+            <div className="blob-gradient absolute inset-0 rounded-3xl"></div>
           </div>
         </div>
       </section>
 
       {/* Problem / Solution */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="bg-neutral-900 rounded-3xl p-8 md:p-12 text-white">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 lg:py-32">
+        <div className="rounded-3xl p-8 md:p-12" style={{ backgroundColor: 'var(--bg-dark)', color: 'var(--bg-surface)' }}>
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-orange-400 mb-2">90%</div>
-              <p className="text-neutral-300">de empresas usan ATS para filtrar CVs</p>
+              <div className="text-4xl font-bold mb-2" style={{ color: 'var(--accent-orange)' }}>90%</div>
+              <p style={{ color: 'var(--text-light)' }}>de empresas usan ATS para filtrar CVs</p>
             </div>
             <div>
-              <div className="text-4xl font-bold text-orange-400 mb-2">25%</div>
-              <p className="text-neutral-300">de CVs pasan el primer filtro</p>
+              <div className="text-4xl font-bold mb-2" style={{ color: 'var(--accent-orange)' }}>25%</div>
+              <p style={{ color: 'var(--text-light)' }}>de CVs pasan el primer filtro</p>
             </div>
             <div>
-              <div className="text-4xl font-bold text-green-400 mb-2">3x</div>
-              <p className="text-neutral-300">más posibilidades con CV Lab</p>
+              <div className="text-4xl font-bold mb-2" style={{ color: 'var(--accent-orange)' }}>3x</div>
+              <p style={{ color: 'var(--text-light)' }}>más posibilidades con CV Lab</p>
             </div>
           </div>
           <div className="mt-8 text-center">
-            <p className="text-lg text-neutral-200">
-              <span className="font-semibold text-white">CV Lab optimiza tu CV</span> para pasar filtros automáticos
+            <p className="text-lg" style={{ color: 'var(--text-light)' }}>
+              <span className="font-semibold" style={{ color: 'var(--bg-surface)' }}>CV Lab optimiza tu CV</span> para pasar filtros automáticos
               y destacar tus fortalezas ante reclutadores.
             </p>
           </div>
@@ -134,57 +103,57 @@ export default function LandingPage() {
       </section>
 
       {/* How it Works */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 lg:py-32" style={{ backgroundColor: 'var(--bg-surface)' }}>
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
             Cómo funciona
           </h2>
-          <p className="text-lg text-neutral-600">
+          <p className="text-lg mt-4 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
             Tres pasos simples para transformar tu CV
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
           {/* Step 1 */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 relative">
-            <div className="absolute -top-4 left-8 bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+          <div className="rounded-2xl border p-6 md:p-8 relative hover:border-opacity-100 transition-colors" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <div className="absolute -top-4 left-8 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'var(--accent-orange)', color: 'var(--bg-surface)' }}>
               1
             </div>
-            <MessageSquare className="w-12 h-12 text-orange-500 mb-4" />
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+            <MessageSquare className="w-12 h-12 mb-4" style={{ color: 'var(--text-secondary)' }} />
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
               Chatea con OCTAVIA
             </h3>
-            <p className="text-neutral-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Nuestra IA te guía paso a paso para construir un CV profesional.
               Solo responde sus preguntas naturalmente.
             </p>
           </div>
 
           {/* Step 2 */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 relative">
-            <div className="absolute -top-4 left-8 bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+          <div className="rounded-2xl border p-6 md:p-8 relative hover:border-opacity-100 transition-colors" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <div className="absolute -top-4 left-8 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'var(--accent-orange)', color: 'var(--bg-surface)' }}>
               2
             </div>
-            <Target className="w-12 h-12 text-orange-500 mb-4" />
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+            <Target className="w-12 h-12 mb-4" style={{ color: 'var(--text-secondary)' }} />
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
               Score en tiempo real
             </h3>
-            <p className="text-neutral-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Ve tu progreso de 0 a 100 mientras completas tu CV.
               Alcanza 80+ puntos para maximizar tus oportunidades.
             </p>
           </div>
 
           {/* Step 3 */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-8 relative">
-            <div className="absolute -top-4 left-8 bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+          <div className="rounded-2xl border p-6 md:p-8 relative hover:border-opacity-100 transition-colors" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <div className="absolute -top-4 left-8 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'var(--accent-orange)', color: 'var(--bg-surface)' }}>
               3
             </div>
-            <FileText className="w-12 h-12 text-orange-500 mb-4" />
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+            <FileText className="w-12 h-12 mb-4" style={{ color: 'var(--text-secondary)' }} />
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
               Descarga PDF optimizado
             </h3>
-            <p className="text-neutral-600">
+            <p style={{ color: 'var(--text-secondary)' }}>
               Obtén un PDF profesional listo para aplicar,
               optimizado para ATS y diseñado para impresionar.
             </p>
@@ -193,14 +162,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 lg:py-32">
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Características que te ayudan a destacar
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {[
             {
               icon: Star,
@@ -233,12 +202,19 @@ export default function LandingPage() {
               description: 'Asegura que tu CV cumple estándares de la industria'
             }
           ].map((feature, i) => (
-            <div key={i} className="bg-white rounded-xl border border-neutral-200 p-6 hover:border-orange-200 hover:shadow-md transition-all">
-              <feature.icon className="w-8 h-8 text-orange-500 mb-3" />
-              <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+            <div
+              key={i}
+              className="rounded-xl border p-6 hover:-translate-y-1 transition-all duration-300"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-light)'
+              }}
+            >
+              <feature.icon className="w-8 h-8 mb-3" style={{ color: 'var(--text-secondary)' }} />
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                 {feature.title}
               </h3>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {feature.description}
               </p>
             </div>
@@ -247,46 +223,47 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-12 text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 lg:py-32">
+        <div className="rounded-3xl p-12 text-center" style={{ backgroundColor: 'var(--bg-dark)', color: 'var(--bg-surface)' }}>
+          <h2 className="text-3xl md:text-4xl font-semibold mb-4">
             Consigue el trabajo que mereces
           </h2>
-          <p className="text-lg md:text-xl text-orange-50 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto" style={{ color: 'var(--text-light)' }}>
             Un CV profesional es tu primera impresión.
             Haz que cuente con CV Lab.
           </p>
           <Button
             asChild
             size="lg"
-            className="bg-white text-orange-600 hover:bg-neutral-100 px-8 py-6 text-lg font-semibold"
+            className="px-6 py-3 text-sm font-medium rounded-lg transition-colors"
+            style={{ backgroundColor: 'var(--accent-orange)', color: 'var(--bg-surface)' }}
           >
-            <Link href="/signup">
+            <Link href="/signup" className="inline-flex items-center justify-center">
               Comienza gratis ahora
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <ArrowRight className="ml-2 w-4 h-4" />
             </Link>
           </Button>
-          <p className="text-sm text-orange-100 mt-4">
+          <p className="text-sm mt-4" style={{ color: 'var(--text-light)' }}>
             No requiere tarjeta de crédito
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-200 py-8">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <footer className="border-t py-8" style={{ backgroundColor: 'var(--bg-dark)', borderColor: 'var(--border)' }}>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-bold">CV</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent-orange)' }}>
+                <span className="text-xs font-bold" style={{ color: 'var(--bg-surface)' }}>CV</span>
               </div>
-              <span className="font-semibold text-neutral-900">CV Lab</span>
+              <span className="font-semibold" style={{ color: 'var(--bg-surface)' }}>CV Lab</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-neutral-600">
-              <Link href="/login" className="hover:text-orange-600 transition-colors">
+            <div className="flex items-center gap-6 text-sm">
+              <Link href="/login" className="transition-colors" style={{ color: 'var(--text-muted)' }}>
                 Iniciar sesión
               </Link>
-              <Link href="/signup" className="hover:text-orange-600 transition-colors">
+              <Link href="/signup" className="transition-colors" style={{ color: 'var(--text-muted)' }}>
                 Crear cuenta
               </Link>
             </div>
