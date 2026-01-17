@@ -8,7 +8,7 @@ import { validateSignupForm } from '@/lib/utils/auth-validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileText } from 'lucide-react'
+import { FileText, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -19,6 +19,8 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +43,7 @@ export default function SignUpPage() {
           data: {
             full_name: fullName.trim(),
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/api/auth/send-verification-email?email=${email.trim()}`,
         },
       })
 
@@ -63,120 +65,193 @@ export default function SignUpPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="max-w-md w-full animate-slide-up">
+          <div className="bg-white rounded-2xl border border-neutral-100 p-8 md:p-10 text-center shadow-sm">
+            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-tight mb-3">
+              Cuenta Creada
+            </h1>
+            <p className="text-base text-neutral-600 mb-8 leading-relaxed">
+              Revisa tu email para confirmar tu cuenta y comenzar a crear CVs profesionales.
+            </p>
+            <Link href="/login">
+              <Button
+                className="w-full h-12 text-sm font-medium transition-all duration-200"
+                style={{
+                  backgroundColor: 'var(--accent-orange)',
+                  color: 'white'
+                }}
+              >
+                Ir a Iniciar Sesión
+              </Button>
+            </Link>
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Cuenta Creada</h1>
-          <p className="text-neutral-600 mb-6">
-            Revisa tu email para confirmar tu cuenta.
-          </p>
-          <Link href="/login">
-            <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-              Ir a Login
-            </Button>
-          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Crear Cuenta</h1>
-          <p className="text-neutral-600">
-            Crea tu cuenta para comenzar a generar CVs profesionales con IA
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSignUp} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {error}
+    <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="max-w-md w-full animate-fade-in">
+        <div className="bg-white rounded-2xl border border-neutral-100 p-8 md:p-10 shadow-sm">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div
+              className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-6 transition-transform hover:scale-105"
+              style={{ backgroundColor: 'var(--accent-orange)' }}
+            >
+              <FileText className="w-7 h-7 text-white" />
             </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nombre Completo</Label>
-            <Input
-              id="fullName"
-              type="text"
-              placeholder="Juan Pérez"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="h-11"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-11"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Mínimo 8 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="h-11"
-            />
-            <p className="text-xs text-neutral-500">
-              Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
+            <h1 className="text-3xl md:text-4xl font-semibold text-neutral-900 tracking-tight mb-3">
+              Crear Cuenta
+            </h1>
+            <p className="text-base text-neutral-600 leading-relaxed">
+              Crea tu cuenta para comenzar a generar CVs profesionales con IA
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Repite tu contraseña"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="h-11"
-            />
+          {/* Form */}
+          <form onSubmit={handleSignUp} className="space-y-5">
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="fullName"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Nombre Completo
+              </Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Juan Pérez"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="h-12 border-neutral-200 focus:border-neutral-900 transition-colors"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12 border-neutral-200 focus:border-neutral-900 transition-colors"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Contraseña
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 8 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="h-12 pr-12 border-neutral-200 focus:border-neutral-900 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-2 flex items-center justify-center rounded-md px-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium text-neutral-700"
+              >
+                Confirmar Contraseña
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Repite tu contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="h-12 pr-12 border-neutral-200 focus:border-neutral-900 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-2 flex items-center justify-center rounded-md px-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+                  aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 text-sm font-medium transition-all duration-200 hover:shadow-md"
+              style={{
+                backgroundColor: loading ? 'var(--text-muted)' : 'var(--accent-orange)',
+                color: 'white'
+              }}
+            >
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+            </Button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-neutral-600">
+              ¿Ya tienes cuenta?{' '}
+              <Link
+                href="/login"
+                className="font-medium transition-colors"
+                style={{ color: 'var(--accent-orange)' }}
+              >
+                Inicia sesión
+              </Link>
+            </p>
           </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium"
-          >
-            {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
-          </Button>
-        </form>
-
-        {/* Footer */}
-        <div className="mt-6 text-center text-sm text-neutral-600">
-          ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="text-orange-600 hover:text-orange-700 font-medium">
-            Inicia sesión
-          </Link>
         </div>
       </div>
     </div>

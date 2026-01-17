@@ -2,14 +2,23 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowRight, Loader2, KeyRound, Mail } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, Loader2, KeyRound, Mail } from "lucide-react"
+
+const localizeErrorMessage = (message: string) => {
+  const invalidEmailMatch = message.match(/^Email address "(.+)" is invalid$/)
+  if (invalidEmailMatch) {
+    return `La dirección de email "${invalidEmailMatch[1]}" no es válida.`
+  }
+
+  return message
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,6 +27,7 @@ export default function LoginPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showResendEmail, setShowResendEmail] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   // Capturar errores del hash de la URL (ej: #error=access_denied&error_code=otp_expired)
@@ -43,7 +53,6 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
     setSuccess(null)
@@ -51,6 +60,25 @@ export default function LoginPage() {
 
     try {
       const trimmedEmail = email.trim()
+
+      // Primero verificar si el email existe
+      const checkEmailResponse = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: trimmedEmail }),
+      })
+
+      const emailCheckData = await checkEmailResponse.json()
+
+      if (!emailCheckData.exists) {
+        // El email no existe en el sistema
+        throw new Error("Esta cuenta no existe. ¿Quieres crear una cuenta nueva?")
+      }
+
+      // El email existe, proceder con el login
+      const supabase = createClient()
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
@@ -64,8 +92,33 @@ export default function LoginPage() {
           throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
         }
 
-        // Si el error es de credenciales inválidas, ocultar el botón de reenvío
-        // porque probablemente el email no existe o la contraseña es incorrecta
+        // Para el error de credenciales inválidas, verificar si es cuenta no verificada
+        if (signInError.message.includes("Invalid login credentials")) {
+          // Verificar el estado del email
+          const checkResponse = await fetch('/api/auth/check-verification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: trimmedEmail }),
+          })
+
+          if (checkResponse.ok) {
+            const { exists, verified } = await checkResponse.json()
+
+            // Si el email existe pero no está verificado
+            if (exists && !verified) {
+              setShowResendEmail(true)
+              throw new Error("Tu email no ha sido confirmado. Revisa tu bandeja de entrada o reenvía el email de verificación.")
+            }
+          }
+
+          // Si el email no existe o ya está verificado (entonces la contraseña es incorrecta)
+          setShowResendEmail(false)
+          throw new Error("Contraseña incorrecta.")
+        }
+
+        // Para otros errores, no mostrar el botón
         setShowResendEmail(false)
         throw signInError
       }
@@ -85,15 +138,21 @@ export default function LoginPage() {
           .eq('id', data.user.id)
           .single()
 
-        // Redirigir según el rol
-        if (profile?.role === 'admin') {
-          router.push('/admin/dashboard')
-        } else {
-          router.push('/dashboard')
-        }
+        // Determinar la ruta destino
+        const destination = profile?.role === 'admin' ? '/admin/dashboard' : '/dashboard'
+
+        // Usar window.location para redirección completa
+        // Esto asegura que todos los contextos se reinicien correctamente
+        setTimeout(() => {
+          window.location.href = destination
+        }, 300)
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al iniciar sesión")
+      setError(
+        localizeErrorMessage(
+          error instanceof Error ? error.message : "Error al iniciar sesión",
+        ),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -136,7 +195,11 @@ export default function LoginPage() {
       setSuccess("Email de verificación enviado. Revisa tu bandeja de entrada.")
       setShowResendEmail(false)
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al reenviar email")
+      setError(
+        localizeErrorMessage(
+          error instanceof Error ? error.message : "Error al reenviar email",
+        ),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -164,7 +227,11 @@ export default function LoginPage() {
 
       setSuccess("Email de recuperación enviado. Revisa tu bandeja de entrada.")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Error al enviar email de recuperación")
+      setError(
+        localizeErrorMessage(
+          error instanceof Error ? error.message : "Error al enviar email de recuperación",
+        ),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -268,14 +335,28 @@ export default function LoginPage() {
               >
                 Contraseña
               </Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12 px-4 bg-white border-neutral-200 focus-visible:border-neutral-400 focus-visible:ring-neutral-400/20"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 pr-12 px-4 bg-white border-neutral-200 focus-visible:border-neutral-400 focus-visible:ring-neutral-400/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-2 flex items-center justify-center rounded-md px-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
